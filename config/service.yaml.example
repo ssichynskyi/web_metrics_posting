@@ -1,0 +1,11 @@
+---
+Metrics endpoint:
+  Aiven:
+    Project:
+      name:
+    Kafka:
+      host: ''
+      port:
+    Postgres:
+      host: ''
+      port:
