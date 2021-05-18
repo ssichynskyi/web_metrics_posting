@@ -1,9 +1,7 @@
 import json
 import logging
-import os
 
 from kafka import KafkaConsumer
-from utils.env_config import config
 
 
 log = logging.getLogger(__name__)
@@ -26,6 +24,13 @@ class Consumer:
             ca_path: path to CA certificate
             cert_path: service cert path
             key_path: service cert key path
+
+        Usage:
+            Connection is activated not on object instantiation but
+            when entering with statement. e.g.:
+            consumer = Consumer(...)
+            with consumer:
+                consumer.send(...)
 
         """
         self._topics = topics
@@ -50,6 +55,7 @@ class Consumer:
             consumer_timeout_ms=1000,
             value_deserializer=lambda x: json.loads(x.decode("utf-8"))
         )
+        log.info(f'Connected to kafka broker at: {self._service_uri}')
 
     def fetch_latest(self):
         """Fetches only not read messages by members of this group
@@ -61,22 +67,10 @@ class Consumer:
         messages = list()
         for message in self._consumer:
             messages.append(message.value)
+        log.info(f'Fetched {len(messages)} messages from {self._service_uri}')
         self._consumer.commit()
         return messages
 
     def __exit__(self, exc_type, exc_value, traceback):
         self._consumer.close(autocommit=True)
-
-
-_kafka_url = config['Metrics endpoint']['Aiven']['Kafka']['host']
-_kafka_port = str(config['Metrics endpoint']['Aiven']['Kafka']['port'])
-kafka_uri = ':'.join((_kafka_url, _kafka_port))
-ca_path = os.environ['CA-CERT']
-cert_path = os.environ['SERVICE_CERT']
-key_path = os.environ['SERVICE-KEY']
-
-aiven_kafka_consumer = Consumer('website-metrics', service_uri=kafka_uri, ca_path=ca_path, cert_path=cert_path, key_path=key_path)
-with aiven_kafka_consumer:
-    a = aiven_kafka_consumer.fetch_latest()
-
-print(a)
+        log.info(f'Closed connection tp kafka broker at: {self._service_uri}')
