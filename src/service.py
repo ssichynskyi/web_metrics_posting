@@ -7,9 +7,6 @@ from src.consumer import Consumer
 from utils.env_config import config
 
 
-log = logging.getLogger(__name__)
-
-
 def main(consumer: Consumer, db_wrapper: WebMonitoringDBWrapper, sleep_time: int):
     """Service runner for fetching data from Kafka broker and posting to DB
 
@@ -22,14 +19,15 @@ def main(consumer: Consumer, db_wrapper: WebMonitoringDBWrapper, sleep_time: int
         None, runs until interrupted by user
 
     """
-    while True:
-        with consumer:
+    log = logging.getLogger('ConsumerAndSharingService')
+    with consumer:
+        while True:
             data = consumer.fetch_latest()
             if not data:
                 log.warning('No data to push to DB. Is web metric service running?')
             else:
                 db_wrapper.insert(data)
-        time.sleep(sleep_time)
+            time.sleep(sleep_time)
 
 
 if __name__ == '__main__':
@@ -54,5 +52,9 @@ if __name__ == '__main__':
         os.environ['DB_PASS'],
         config['Metrics endpoint']['Aiven']['Postgres']['host'],
         config['Metrics endpoint']['Aiven']['Postgres']['port']
+    )
+    logging.basicConfig(
+        format='%(asctime)s - %(levelname)s | %(name)s >>> %(message)s',
+        datefmt='%d-%b-%Y %H:%M:%S'
     )
     main(aiven_kafka_consumer, db, sleep_after_request)
