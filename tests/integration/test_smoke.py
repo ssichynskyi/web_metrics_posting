@@ -15,6 +15,5 @@ def test_smoke_kafka_consumer():
 
 
 @pytest.mark.smoke
-@pytest.mark.slow
 def test_smoke_data_base():
     db.execute_sql(f"SELECT * FROM {db.TABLE} WHERE comment='test'")
