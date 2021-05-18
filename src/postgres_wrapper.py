@@ -4,6 +4,7 @@ import psycopg2
 
 from typing import Union, Dict, List, Tuple, Optional, Any
 
+
 log = logging.getLogger(__name__)
 
 
@@ -17,6 +18,7 @@ class Postgres:
             'port': port
         }
         self._db = database
+        self._uri = f'{host}:{port}'
 
     def execute_sql(
             self,
@@ -50,6 +52,7 @@ class Postgres:
         # One here more scalable (if used with bulk transactions updating many rows at once)
         # The side effect is that for testability reasons it require passing lib as param
         with connection:
+            log.info(f'Establishing connection to DB: {self._uri}')
             with connection.cursor() as cursor:
                 log.info(f'Sending SQL query: {sql}')
                 try:
@@ -101,7 +104,7 @@ class WebMonitoringDBWrapper(Postgres):
             log.warning(f'Insertion query called but no data supplied! Operation aborted.')
             return
         try:
-            data = [{self.DATA_TO_DB[k]: v if v else 'NULL' for k, v in entry.items()} for entry in data]
+            data = [{self.DATA_TO_DB[k]: 'NULL' if v is None else v for k, v in entry.items()} for entry in data]
         except KeyError as e:
             log.error(f'Incorrect data format. Error details: {e.args}')
             return
@@ -148,5 +151,5 @@ class WebMonitoringDBWrapper(Postgres):
         '''
         result = self.execute_sql(delete_query, db_lib)
         if result:
-            log.info(f'Successfully removed rows from db {result}')
+            log.info(f'Successfully removed rows from db: {result}')
         return result
