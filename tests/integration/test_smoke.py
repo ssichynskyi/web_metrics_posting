@@ -1,6 +1,6 @@
 import pytest
 
-from src.service import db, aiven_kafka_consumer as consumer
+from src.service import DATABASE, AIVEN_KAFKA_CONSUMER as consumer
 
 
 """These tests ensure that kafka consumer and DB connector are properly configured
@@ -16,4 +16,4 @@ def test_smoke_kafka_consumer():
 
 @pytest.mark.smoke
 def test_smoke_data_base():
-    db.execute_sql(f"SELECT * FROM {db.TABLE} WHERE comment='test'")
+    DATABASE.execute_sql(f"SELECT * FROM {DATABASE.TABLE} WHERE comment='test'")
