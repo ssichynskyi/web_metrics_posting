@@ -13,5 +13,5 @@ class ConfigParser:
             return yaml.safe_load(contents)
 
 
-_path_to_config = Path(os.environ['PROJECT_ROOT']).joinpath('config', 'service.yaml')
+_path_to_config = Path(os.environ['PUBLISH_CONFIG'])
 config = ConfigParser(_path_to_config)
