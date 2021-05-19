@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import os
 import yaml
 
 from pathlib import Path
@@ -13,5 +13,5 @@ class ConfigParser:
             return yaml.safe_load(contents)
 
 
-_path_to_config = Path(__file__).parent.parent.joinpath('config', 'service.yaml')
+_path_to_config = Path(os.environ['PROJECT_ROOT']).joinpath('config', 'service.yaml')
 config = ConfigParser(_path_to_config)
