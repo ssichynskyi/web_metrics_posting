@@ -1,6 +1,13 @@
-# Service function
+# Web metric consumer-publisher
+
+- [What it does](#what-it-does)
+- [Out of scope](#out-of-scope)
+- [Known issues](#known-issues)
+- [ToDo](#todo)
+
+## What it does?
 Implements a service that consumes messages from Kafka broker and sends them 
-to postgresql database.
+to postgresql database. Service can be started separately or used like a package.
 
 ## Out of scope
 - scaling this service. Although it could be a bottle-neck in a real-life system,
@@ -21,11 +28,9 @@ scaling and, when combined with message queue, ensure the delivery, this hardly 
 - full test coverage
 
 ## Known issues
-- little code duplication between services like utils/env_config.py
+- if there's at least one message with corrupted format, the entire readout by consumer-publisher service
+will be rejected by DB and not posted. Not fixed because of lack of time and low importance
 
 ## ToDo:
-- extract / create documentation
 - create CI for unit test execution
 - create CI for integration test execution (?)
-- add E2E tests with and without regexp pattern
-- add E2E tests with invalid website
