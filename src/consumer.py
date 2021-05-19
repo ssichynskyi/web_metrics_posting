@@ -2,6 +2,7 @@ import json
 import logging
 
 from kafka import KafkaConsumer
+from typing import Iterable
 
 
 log = logging.getLogger(__name__)
@@ -71,6 +72,22 @@ class Consumer:
         self._consumer.commit()
         return messages
 
+    def change_topics(self, topics: Iterable) -> None:
+        """Changes Kafka consumer topic statically or dynamically
+
+        Args:
+            topics: any iterable: set, list, tuple
+
+        Returns:
+            None
+
+        """
+        topics = tuple(topics)
+        try:
+            self._consumer.unsubscribe()
+            self._consumer.subscribe(list(topics))
+        except AttributeError:
+            self._topics = topics
+
     def __exit__(self, exc_type, exc_value, traceback):
-        self._consumer.close(autocommit=True)
         log.info(f'Closed connection tp kafka broker at: {self._service_uri}')
