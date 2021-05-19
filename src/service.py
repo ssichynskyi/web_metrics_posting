@@ -3,10 +3,17 @@ import logging
 import os
 import time
 
-from src.postgres_wrapper import WebMonitoringDBWrapper
-from src.consumer import Consumer
+
 from typing import Iterable, Optional
-from utils.env_config import config
+
+try:
+    from ..src.postgres_wrapper import WebMonitoringDBWrapper
+    from ..src.consumer import Consumer
+    from ..utils.env_config import config
+except ImportError:
+    from src.postgres_wrapper import WebMonitoringDBWrapper
+    from src.consumer import Consumer
+    from utils.env_config import config
 
 
 TOPIC = 'website-metrics'
