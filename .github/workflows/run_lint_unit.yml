@@ -69,8 +69,8 @@ jobs:
         run: |
           pipenv run mkdir certs
           pipenv run echo ${{ secrets.AIVEN_CLOUD_CA }} > certs/ca.pem
-          pipenv run echo ${{ AIVEN_CLOUD_SERVICE_CERT }} > certs/service.cert
-          pipenv run echo ${{ AIVEN_CLOUD_SERVICE_KEY }} > certs/service.key
+          pipenv run echo ${{ secrets.AIVEN_CLOUD_SERVICE_CERT }} > certs/service.cert
+          pipenv run echo ${{ secrets.AIVEN_CLOUD_SERVICE_KEY }} > certs/service.key
           pipenv run python utils/ci_config_builder.py --file=config/service.yaml --name=Aiven --kafkaurl=${{ secrets.AIVEN_CLOUD_KAFKA_URL }} \
           --kafkaport=${{ secrets.AIVEN_CLOUD_KAFKA_URL }} --postgresurl=${{ secrets.AIVEN_CLOUD_POSTGRES_URL }} --postgresport=${{ secrets.AIVEN_CLOUD_POSTGRES_PORT }}
           pipenv run pytest tests/integration -m "integration"
