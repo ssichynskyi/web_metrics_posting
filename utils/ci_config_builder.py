@@ -5,8 +5,8 @@ import yaml
 if __name__ == '__main__':
     cmd_args = argparse.ArgumentParser()
     cmd_args.add_argument(
-        '--sample',
-        dest='sample',
+        '--file',
+        dest='file',
         type=str,
         required=True
     )
@@ -59,5 +59,5 @@ if __name__ == '__main__':
     config['Metrics endpoint'][args.name]['Postgres']['host'] = args.postgresurl
     config['Metrics endpoint'][args.name]['Postgres']['port'] = args.postgresport
 
-    with open(args.sample.replace('.example', ''), 'w+') as f:
+    with open(args.file, 'w+') as f:
         yaml.safe_dump(config, f)
