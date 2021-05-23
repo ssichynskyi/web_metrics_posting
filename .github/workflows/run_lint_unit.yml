@@ -60,15 +60,12 @@ jobs:
 
       - name: Run test suite
         run: |
-          echo $GITHUB_WORKSPACE
-          echo $GITHUB_WORKSPACE/config/service.yaml
-          echo ${{ GITHUB_WORKSPACE }}
           echo ${{ github.workspace }}
-          # pipenv run export PROJECT_ROOT=${{ GITHUB_WORKSPACE }}
-          # pipenv run export PYTHONPATH=${{ GITHUB_WORKSPACE }}
-          # pipenv run export PUBLISH_CONFIG=${{ GITHUB_WORKSPACE }}/config/service.yaml
+          # pipenv run export PROJECT_ROOT=${{ github.workspace }}
+          # pipenv run export PYTHONPATH=${{ github.workspace }}
+          # pipenv run export PUBLISH_CONFIG=${{ github.workspace }}}/config/service.yaml
           pipenv run pytest -m "unit"
         env:
-          PROJECT_ROOT: ${{ GITHUB_WORKSPACE }}
-          PYTHONPATH: ${{ GITHUB_WORKSPACE }}
-          PUBLISH_CONFIG: ${{GITHUB_WORKSPACE}}/config/service.yaml
+          PROJECT_ROOT: ${{ github.workspace }}
+          PYTHONPATH: ${{ github.workspace }}
+          PUBLISH_CONFIG: ${{ github.workspace }}/config/service.yaml
