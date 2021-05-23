@@ -21,8 +21,6 @@ jobs:
 
       - name: Run syntax checks
         run: |
-          echo $GITHUB_WORKSPACE
-          echo $GITHUB_WORKSPACE/config/service.yaml
           echo ${{ GITHUB_WORKSPACE }}
           echo ${{ github.workspace }}
           python -m pip install --upgrade pip
