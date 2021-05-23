@@ -23,6 +23,8 @@ jobs:
         run: |
           echo $GITHUB_WORKSPACE
           echo $GITHUB_WORKSPACE/config/service.yaml
+          echo ${{ GITHUB_WORKSPACE }}
+          echo ${{ github.workspace }}
           python -m pip install --upgrade pip
           python -m pip install flake8
           # stop the build if there are Python syntax errors or undefined names
@@ -61,8 +63,15 @@ jobs:
 
       - name: Run test suite
         run: |
+          echo $GITHUB_WORKSPACE
+          echo $GITHUB_WORKSPACE/config/service.yaml
+          echo ${{ GITHUB_WORKSPACE }}
+          echo ${{ github.workspace }}
+          # pipenv run export PROJECT_ROOT=${{ GITHUB_WORKSPACE }}
+          # pipenv run export PYTHONPATH=${{ GITHUB_WORKSPACE }}
+          # pipenv run export PUBLISH_CONFIG=${{ GITHUB_WORKSPACE }}/config/service.yaml
           pipenv run pytest -m "unit"
         env:
-          PROJECT_ROOT: $GITHUB_WORKSPACE
-          PYTHONPATH: $GITHUB_WORKSPACE
-          PUBLISH_CONFIG: $GITHUB_WORKSPACE/config/service.yaml
+          PROJECT_ROOT: ${{ GITHUB_WORKSPACE }}
+          PYTHONPATH: ${{ GITHUB_WORKSPACE }}
+          PUBLISH_CONFIG: ${{GITHUB_WORKSPACE}}/config/service.yaml
