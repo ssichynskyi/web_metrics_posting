@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
-
+          
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
@@ -21,6 +21,8 @@ jobs:
 
       - name: Run syntax checks
         run: |
+          echo $GITHUB_WORKSPACE
+          echo $GITHUB_WORKSPACE/config/service.yaml
           python -m pip install --upgrade pip
           python -m pip install flake8
           # stop the build if there are Python syntax errors or undefined names
@@ -61,6 +63,6 @@ jobs:
         run: |
           pipenv run pytest -m "unit"
         env:
-          PROJECT_ROOT: ./
-          PYTHONPATH: ./
-          PUBLISH_CONFIG: config/service.yaml
+          PROJECT_ROOT: $GITHUB_WORKSPACE
+          PYTHONPATH: $GITHUB_WORKSPACE
+          PUBLISH_CONFIG: $GITHUB_WORKSPACE/config/service.yaml
