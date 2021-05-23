@@ -72,19 +72,17 @@ jobs:
           pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_CA }} > certs/ca.pem
           pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_SERVICE_CERT }} > certs/service.cert
           pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_SERVICE_KEY }} > certs/service.key
-          cd certs/
-          echo $PWD
-          ls -l
-          which pytest
-          cd ..
+          pipenv run ls -l certs
+          pipenv run which pytest
           pipenv run python utils/ci_config_builder.py --file=config/service.yaml --name=Aiven --kafkaurl=${{ secrets.AIVEN_CLOUD_KAFKA_URL }} --kafkaport=${{ secrets.AIVEN_CLOUD_KAFKA_URL }} --postgresurl=${{ secrets.AIVEN_CLOUD_POSTGRES_URL }} --postgresport=${{ secrets.AIVEN_CLOUD_POSTGRES_PORT }}
+          pipenv run ls -l config/
           pipenv run pytest tests/integration -m "integration"
         env:
           PROJECT_ROOT: ${{ github.workspace }}
           PYTHONPATH: ${{ github.workspace }}
           PUBLISH_CONFIG: ${{ github.workspace }}/config/service.yaml
-          CA-CERT: certs/ca.pem
-          SERVICE-CERT: certs/service.cert
-          SERVICE-KEY: certs/service.key
+          CA-CERT: ${{ github.workspace }}/certs/ca.pem
+          SERVICE-CERT: ${{ github.workspace }}/certs/service.cert
+          SERVICE-KEY: ${{ github.workspace }}/certs/service.key
           DB_LOGIN: ${{ secrets.AIVEN_CLOUD_POSTGRES_LOGIN }}
           DB_PASS: ${{ secrets.AIVEN_CLOUD_POSTGRES_PASS }}
