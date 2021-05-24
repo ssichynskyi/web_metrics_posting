@@ -90,11 +90,11 @@ jobs:
           pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_SERVICE_KEY }} > ${{ github.workspace }}/certs/service.key
           pipenv --envs --support --verbose run python utils/ci_config_builder.py --file=config/service.yaml --name=Aiven --kafkaurl=${{ secrets.AIVEN_CLOUD_KAFKA_URL }} --kafkaport=${{ secrets.AIVEN_CLOUD_KAFKA_PORT }} --postgresurl=${{ secrets.AIVEN_CLOUD_POSTGRES_URL }} --postgresport=${{ secrets.AIVEN_CLOUD_POSTGRES_PORT }}
           
-          pipenv --envs --support --verbose run cat $PUBLISH_CONFIG
-          pipenv --envs --support --verbose run cat ${{ github.workspace }}/config/service.yaml
-          pipenv --envs --support --verbose run env
+          # pipenv --envs --support --verbose run cat $PUBLISH_CONFIG
+          # pipenv --envs --support --verbose run cat ${{ github.workspace }}/config/service.yaml
+          # pipenv --envs --support --verbose run env
           
-          pipenv --envs --support --verbose run pytest tests/integration -v
+          # pipenv --envs --support --verbose run pytest tests/integration -v
 
         env:
           PROJECT_ROOT: ${{ github.workspace }}
