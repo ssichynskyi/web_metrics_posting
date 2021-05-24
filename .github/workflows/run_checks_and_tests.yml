@@ -47,19 +47,19 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      - name: Code Inspector GitHub action
-        uses: codeinspectorio/github-action@v1
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          code_inspector_access_key: ${{ secrets.CODE_INSPECTOR_ACCESS_KEY }}
-          code_inspector_secret_key: ${{ secrets.CODE_INSPECTOR_SECRET_KEY }}
-          min_quality_grade: 'NEUTRAL'
-          min_quality_score: '70'
-          max_defects_rate: '0.1'
-          max_complex_functions_rate: '0.1'
-          max_long_functions_rate: '0.1'
-          project_name: 'web_metrics_posting'
-          max_timeout_sec: '600'
+#       - name: Code Inspector GitHub action
+#         uses: codeinspectorio/github-action@v1
+#         with:
+#           repo_token: ${{ secrets.GITHUB_TOKEN }}
+#           code_inspector_access_key: ${{ secrets.CODE_INSPECTOR_ACCESS_KEY }}
+#           code_inspector_secret_key: ${{ secrets.CODE_INSPECTOR_SECRET_KEY }}
+#           min_quality_grade: 'NEUTRAL'
+#           min_quality_score: '70'
+#           max_defects_rate: '0.1'
+#           max_complex_functions_rate: '0.1'
+#           max_long_functions_rate: '0.1'
+#           project_name: 'web_metrics_posting'
+#           max_timeout_sec: '600'
 
       - name: Install pipenv
         run: |
@@ -82,21 +82,20 @@ jobs:
         env:
           PROJECT_ROOT: ${{ github.workspace }}
           PYTHONPATH: ${{ github.workspace }}
-          PUBLISH_CONFIG: ${{ github.workspace }}/config/service.yaml
 
-#       - name: run integration tests
-#         run: |
-#           pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_CA }} > ${{ github.workspace }}/certs/ca.pem
-#           pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_SERVICE_CERT }} > ${{ github.workspace }}/certs/service.cert
-#           pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_SERVICE_KEY }} > ${{ github.workspace }}/certs/service.key
-#           pipenv run python utils/ci_config_builder.py --file=config/service.yaml --name=Aiven --kafkaurl=${{ secrets.AIVEN_CLOUD_KAFKA_URL }} --kafkaport=${{ secrets.AIVEN_CLOUD_KAFKA_PORT }} --postgresurl=${{ secrets.AIVEN_CLOUD_POSTGRES_URL }} --postgresport=${{ secrets.AIVEN_CLOUD_POSTGRES_PORT }}
-#           pipenv run pytest tests/integration -m "integration"
-#         env:
-#           PROJECT_ROOT: ${{ github.workspace }}
-#           PYTHONPATH: ${{ github.workspace }}
-#           PUBLISH_CONFIG: ${{ github.workspace }}/config/service.yaml
-#           CA-CERT: ${{ github.workspace }}/certs/ca.pem
-#           SERVICE-CERT: ${{ github.workspace }}/certs/service.cert
-#           SERVICE-KEY: ${{ github.workspace }}/certs/service.key
-#           DB_LOGIN: ${{ secrets.AIVEN_CLOUD_POSTGRES_LOGIN }}
-#           DB_PASS: ${{ secrets.AIVEN_CLOUD_POSTGRES_PASS }}
+      - name: run integration tests
+        run: |
+          pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_CA }} > ${{ github.workspace }}/certs/ca.pem
+          pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_SERVICE_CERT }} > ${{ github.workspace }}/certs/service.cert
+          pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_SERVICE_KEY }} > ${{ github.workspace }}/certs/service.key
+          pipenv run python utils/ci_config_builder.py --file=config/service.yaml --name=Aiven --kafkaurl=${{ secrets.AIVEN_CLOUD_KAFKA_URL }} --kafkaport=${{ secrets.AIVEN_CLOUD_KAFKA_PORT }} --postgresurl=${{ secrets.AIVEN_CLOUD_POSTGRES_URL }} --postgresport=${{ secrets.AIVEN_CLOUD_POSTGRES_PORT }}
+          pipenv run pytest tests/integration -m "integration"
+        env:
+          PROJECT_ROOT: ${{ github.workspace }}
+          PYTHONPATH: ${{ github.workspace }}
+          PUBLISH_CONFIG: ${{ github.workspace }}/config/service.yaml
+          CA-CERT: ${{ github.workspace }}/certs/ca.pem
+          SERVICE-CERT: ${{ github.workspace }}/certs/service.cert
+          SERVICE-KEY: ${{ github.workspace }}/certs/service.key
+          DB_LOGIN: ${{ secrets.AIVEN_CLOUD_POSTGRES_LOGIN }}
+          DB_PASS: ${{ secrets.AIVEN_CLOUD_POSTGRES_PASS }}
