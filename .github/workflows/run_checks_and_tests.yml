@@ -84,7 +84,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
       - name: run integration tests
         run: |
-          pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_CA }} > ${{ github.workspace }}/certs/ca.pem
+          pipenv run printf "%s" $(echo ${{ secrets.AIVEN_CLOUD_CA }}) > ${{ github.workspace }}/certs/ca.pem
 
         env:
           PROJECT_ROOT: ${{ github.workspace }}
