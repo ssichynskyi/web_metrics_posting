@@ -1,0 +1,102 @@
+name: Run syntax checks, static code analysis and unit tests
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.9]
+    timeout-minutes: 10
+ 
+# Code snippet for local DB connection 
+#     services:
+#       db_service:
+#         image: postgres
+#         env:
+#           POSTGRES_USER: postgres
+#           POSTGRES_DB: postgres
+#           POSTGRES_PASSWORD: postgres
+#         # Set health checks to wait until postgres has started
+#         options: >-
+#           --health-cmd pg_isready
+#           --health-interval 10s
+#           --health-timeout 5s
+#           --health-retries 5
+#         ports:
+#           # Maps tcp port 5432 on service container to the host
+#           - 5432:5432
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+          
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run syntax checks
+        run: |
+          curl 'www.google.com'
+          python -m pip install --upgrade pip
+          python -m pip install flake8
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Code Inspector GitHub action
+        uses: codeinspectorio/github-action@v1
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          code_inspector_access_key: ${{ secrets.CODE_INSPECTOR_ACCESS_KEY }}
+          code_inspector_secret_key: ${{ secrets.CODE_INSPECTOR_SECRET_KEY }}
+          min_quality_grade: 'NEUTRAL'
+          min_quality_score: '70'
+          max_defects_rate: '0.1'
+          max_complex_functions_rate: '0.1'
+          max_long_functions_rate: '0.1'
+          project_name: 'web_metrics_posting'
+          max_timeout_sec: '600'
+
+      - name: Install pipenv
+        run: |
+          python -m pip install --upgrade pipenv wheel
+
+      - id: cache-pipenv
+        uses: actions/cache@v1
+        with:
+          path: ~/.local/share/virtualenvs
+          key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
+
+      - name: Install dependencies
+        if: steps.cache-pipenv.outputs.cache-hit != 'true'
+        run: |
+          pipenv install --dev
+
+      - name: run unit tests
+        run: |
+          pipenv run pytest tests/unit -m "unit"
+        env:
+          PROJECT_ROOT: ${{ github.workspace }}
+          PYTHONPATH: ${{ github.workspace }}
+          PUBLISH_CONFIG: ${{ github.workspace }}/config/service.yaml
+
+#       - name: run integration tests
+#         run: |
+#           pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_CA }} > ${{ github.workspace }}/certs/ca.pem
+#           pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_SERVICE_CERT }} > ${{ github.workspace }}/certs/service.cert
+#           pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_SERVICE_KEY }} > ${{ github.workspace }}/certs/service.key
+#           pipenv run python utils/ci_config_builder.py --file=config/service.yaml --name=Aiven --kafkaurl=${{ secrets.AIVEN_CLOUD_KAFKA_URL }} --kafkaport=${{ secrets.AIVEN_CLOUD_KAFKA_PORT }} --postgresurl=${{ secrets.AIVEN_CLOUD_POSTGRES_URL }} --postgresport=${{ secrets.AIVEN_CLOUD_POSTGRES_PORT }}
+#           pipenv run pytest tests/integration -m "integration"
+#         env:
+#           PROJECT_ROOT: ${{ github.workspace }}
+#           PYTHONPATH: ${{ github.workspace }}
+#           PUBLISH_CONFIG: ${{ github.workspace }}/config/service.yaml
+#           CA-CERT: ${{ github.workspace }}/certs/ca.pem
+#           SERVICE-CERT: ${{ github.workspace }}/certs/service.cert
+#           SERVICE-KEY: ${{ github.workspace }}/certs/service.key
+#           DB_LOGIN: ${{ secrets.AIVEN_CLOUD_POSTGRES_LOGIN }}
+#           DB_PASS: ${{ secrets.AIVEN_CLOUD_POSTGRES_PASS }}
