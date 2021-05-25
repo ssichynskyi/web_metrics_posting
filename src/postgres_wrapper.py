@@ -101,7 +101,7 @@ class WebMonitoringDBWrapper(Postgres):
 
         """
         if not data:
-            log.warning(f'Insertion query called but no data supplied! Operation aborted.')
+            log.warning('Insertion query called but no data supplied! Operation aborted.')
             return
         try:
             data = [{self.DATA_TO_DB[k]: 'NULL' if v is None else v for k, v in entry.items()} for entry in data]
