@@ -10,6 +10,16 @@ log = logging.getLogger(__name__)
 
 class Postgres:
     def __init__(self, database: str, user: str, password: str, host: str, port: Union[int, str]):
+        """Wrapper / Facade class for psycopg2 lib
+
+        Args:
+            database: DB schema to use
+            user: username for authentication
+            password: password for authentication
+            host: url of DB service
+            port: port of DB service to connect to
+
+        """
         self._connection_params = {
             'database': database,
             'user': user,
@@ -82,6 +92,18 @@ class WebMonitoringDBWrapper(Postgres):
     TABLE = 'web_metrics.metrics'
 
     def __init__(self, database: str, user: str, password: str, host: str, port: Union[int, str]):
+        """Wrapper / Facade class for psycopg2 lib
+
+        Extends:
+            Postgress class
+
+        Args:
+            database: DB schema to use
+            user: username for authentication
+            password: password for authentication
+            host: url of DB service
+            port: port of DB service to connect to
+        """
         super().__init__(database, user, password, host, port)
 
     def insert(self, data: List[Dict[str, str]], db_lib=psycopg2) -> Optional[List[Tuple[
@@ -101,7 +123,7 @@ class WebMonitoringDBWrapper(Postgres):
 
         """
         if not data:
-            log.warning(f'Insertion query called but no data supplied! Operation aborted.')
+            log.warning('Insertion query called but no data supplied! Operation aborted.')
             return
         try:
             data = [{self.DATA_TO_DB[k]: 'NULL' if v is None else v for k, v in entry.items()} for entry in data]
@@ -140,7 +162,7 @@ class WebMonitoringDBWrapper(Postgres):
 
         """
         if not kwargs:
-            log.warning(f'Calling delete with no params rejected! Are you trying to wipe all data?')
+            log.warning('Calling delete with no params rejected! Are you trying to wipe all data?')
             return
         search_param_str = ','.join([f"{str(k)}='{str(v)}'" for k, v in kwargs.items()])
         delete_query = f'''
