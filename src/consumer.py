@@ -42,6 +42,7 @@ class Consumer:
         self._client_id = f'{self.CLIENT_ID}:{id(self)}'
 
     def __enter__(self):
+        """Method which creates the connection. Activated inside with statement."""
         self._consumer = KafkaConsumer(
             *self._topics,
             bootstrap_servers=self._service_uri,
@@ -90,4 +91,5 @@ class Consumer:
             self._topics = topics
 
     def __exit__(self, exc_type, exc_value, traceback):
+        """Actions to perform when exiting with statement."""
         log.info(f'Closed connection tp kafka broker at: {self._service_uri}')
