@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 class Postgres:
     def __init__(self, database: str, user: str, password: str, host: str, port: Union[int, str]):
         """Wrapper / Facade class for psycopg2 lib
-        
+
         Args:
             database: DB schema to use
             user: username for authentication
@@ -93,10 +93,10 @@ class WebMonitoringDBWrapper(Postgres):
 
     def __init__(self, database: str, user: str, password: str, host: str, port: Union[int, str]):
         """Wrapper / Facade class for psycopg2 lib
-        
+
         Extends:
             Postgress class
-        
+
         Args:
             database: DB schema to use
             user: username for authentication
