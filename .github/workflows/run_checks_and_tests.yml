@@ -85,11 +85,14 @@ jobs:
       - name: run integration tests
         run: |
           pipenv run mkdir ${{ github.workspace }}/certs
-          pipenv run printf "%s" $(echo ${{ secrets.AIVEN_CLOUD_CA }}) > ${{ github.workspace }}/certs/ca.pem
+          # pipenv run printf "%s" $(echo ${{ secrets.AIVEN_CLOUD_CA }}) > ${{ github.workspace }}/certs/ca.pem
+          pipenv run echo ${{ secrets.AIVEN_CLOUD_CA }} > ${{ github.workspace }}/certs/ca.pem
           pipenv run cat ${{ github.workspace }}/certs/ca.pem
-          pipenv run printf "%s" $(echo ${{ secrets.AIVEN_CLOUD_SERVICE_CERT }}) > ${{ github.workspace }}/certs/service.cert
+          # pipenv run printf "%s" $(echo ${{ secrets.AIVEN_CLOUD_SERVICE_CERT }}) > ${{ github.workspace }}/certs/service.cert
+          pipenv run echo ${{ secrets.AIVEN_CLOUD_SERVICE_CERT }} > ${{ github.workspace }}/certs/service.cert
           pipenv run cat ${{ github.workspace }}/certs/service.cert
-          pipenv run printf "%s" $(echo ${{ secrets.AIVEN_CLOUD_SERVICE_KEY }}) > ${{ github.workspace }}/certs/service.key
+          # pipenv run printf "%s" $(echo ${{ secrets.AIVEN_CLOUD_SERVICE_KEY }}) > ${{ github.workspace }}/certs/service.key
+          pipenv run echo ${{ secrets.AIVEN_CLOUD_SERVICE_KEY }} > ${{ github.workspace }}/certs/service.key
           pipenv run cat ${{ github.workspace }}/certs/service.key
           pipenv --envs --support --verbose run python ${{ github.workspace }}/utils/ci_config_builder.py --file=${{ github.workspace }}/config/service.yaml --name=Aiven --kafkaurl=${{ secrets.AIVEN_CLOUD_KAFKA_URL }} --kafkaport=${{ secrets.AIVEN_CLOUD_KAFKA_PORT }} --postgresurl=${{ secrets.AIVEN_CLOUD_POSTGRES_URL }} --postgresport=${{ secrets.AIVEN_CLOUD_POSTGRES_PORT }}
           
