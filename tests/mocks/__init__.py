@@ -1,1 +1,1 @@
-"""Contains implementations of mocks used in 'tests' module"""
+"""Contains implementations of mocks used in 'tests' module."""
