@@ -1,3 +1,4 @@
+![CI status](https://github.com/ssichynskyi/web_metrics_posting/actions/workflows/run_checks_and_tests.yml/badge.svg)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/771de52d40b64cb588be56e77ce7c692)](https://www.codacy.com/gh/ssichynskyi/web_metrics_posting/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ssichynskyi/web_metrics_posting&amp;utm_campaign=Badge_Grade)
 # Web metric consumer-publisher
 
