@@ -63,6 +63,7 @@ jobs:
         env:
           PROJECT_ROOT: ${{ github.workspace }}
           PYTHONPATH: ${{ github.workspace }}
+
       - name: run integration tests
         run: |
           echo 'Creating folder for certificates and key...'
