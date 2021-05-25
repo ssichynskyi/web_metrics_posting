@@ -7,26 +7,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.9]
+        python-version: [3.7, 3.8, 3.9]
     timeout-minutes: 10
- 
-# Code snippet for local DB connection 
-#     services:
-#       db_service:
-#         image: postgres
-#         env:
-#           POSTGRES_USER: postgres
-#           POSTGRES_DB: postgres
-#           POSTGRES_PASSWORD: postgres
-#         # Set health checks to wait until postgres has started
-#         options: >-
-#           --health-cmd pg_isready
-#           --health-interval 10s
-#           --health-timeout 5s
-#           --health-retries 5
-#         ports:
-#           # Maps tcp port 5432 on service container to the host
-#           - 5432:5432
 
     steps:
       - name: Check out repository code
@@ -39,7 +21,6 @@ jobs:
 
       - name: Run syntax checks
         run: |
-          curl 'www.google.com'
           python -m pip install --upgrade pip
           python -m pip install flake8
           # stop the build if there are Python syntax errors or undefined names
@@ -82,21 +63,29 @@ jobs:
         env:
           PROJECT_ROOT: ${{ github.workspace }}
           PYTHONPATH: ${{ github.workspace }}
-          PUBLISH_CONFIG: ${{ github.workspace }}/config/service.yaml
 
-#       - name: run integration tests
-#         run: |
-#           pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_CA }} > ${{ github.workspace }}/certs/ca.pem
-#           pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_SERVICE_CERT }} > ${{ github.workspace }}/certs/service.cert
-#           pipenv run printf "%s" ${{ secrets.AIVEN_CLOUD_SERVICE_KEY }} > ${{ github.workspace }}/certs/service.key
-#           pipenv run python utils/ci_config_builder.py --file=config/service.yaml --name=Aiven --kafkaurl=${{ secrets.AIVEN_CLOUD_KAFKA_URL }} --kafkaport=${{ secrets.AIVEN_CLOUD_KAFKA_PORT }} --postgresurl=${{ secrets.AIVEN_CLOUD_POSTGRES_URL }} --postgresport=${{ secrets.AIVEN_CLOUD_POSTGRES_PORT }}
-#           pipenv run pytest tests/integration -m "integration"
-#         env:
-#           PROJECT_ROOT: ${{ github.workspace }}
-#           PYTHONPATH: ${{ github.workspace }}
-#           PUBLISH_CONFIG: ${{ github.workspace }}/config/service.yaml
-#           CA-CERT: ${{ github.workspace }}/certs/ca.pem
-#           SERVICE-CERT: ${{ github.workspace }}/certs/service.cert
-#           SERVICE-KEY: ${{ github.workspace }}/certs/service.key
-#           DB_LOGIN: ${{ secrets.AIVEN_CLOUD_POSTGRES_LOGIN }}
-#           DB_PASS: ${{ secrets.AIVEN_CLOUD_POSTGRES_PASS }}
+      - name: run integration tests
+        run: |
+          echo 'Creating folder for certificates and key...'
+          pipenv run mkdir ${{ github.workspace }}/certs
+          pipenv run printf "%s" $(echo ${{ secrets.AIVEN_CLOUD_CA }}) > ${{ github.workspace }}/certs/ca.pem
+          
+          pipenv run printf "%s" $(echo ${{ secrets.AIVEN_CLOUD_SERVICE_CERT }}) > ${{ github.workspace }}/certs/service.cert
+          
+          pipenv run printf "%s" $(echo ${{ secrets.AIVEN_CLOUD_SERVICE_KEY }}) > ${{ github.workspace }}/certs/service.key
+          
+          echo 'Generate config file service.yaml...'
+          pipenv --envs --support --verbose run python ${{ github.workspace }}/utils/ci_config_builder.py --file=${{ github.workspace }}/config/service.yaml --name=Aiven --kafkaurl=${{ secrets.AIVEN_CLOUD_KAFKA_URL }} --kafkaport=${{ secrets.AIVEN_CLOUD_KAFKA_PORT }} --postgresurl=${{ secrets.AIVEN_CLOUD_POSTGRES_URL }} --postgresport=${{ secrets.AIVEN_CLOUD_POSTGRES_PORT }}
+          echo 'Run tests...'
+          # excluding kafka consumer smoke test
+          pipenv --envs --support --verbose run pytest tests/integration -v -m "not slow"
+
+        env:
+          PROJECT_ROOT: ${{ github.workspace }}
+          PYTHONPATH: ${{ github.workspace }}
+          PUBLISH_CONFIG: ${{ github.workspace }}/config/service.yaml
+          CA-CERT: ${{ github.workspace }}/certs/ca.pem
+          SERVICE-CERT: ${{ github.workspace }}/certs/service.cert
+          SERVICE-KEY: ${{ github.workspace }}/certs/service.key
+          DB_LOGIN: ${{ secrets.AIVEN_CLOUD_POSTGRES_LOGIN }}
+          DB_PASS: ${{ secrets.AIVEN_CLOUD_POSTGRES_PASS }}
