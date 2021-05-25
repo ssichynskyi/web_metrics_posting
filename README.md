@@ -57,7 +57,4 @@ scaling and, when combined with message queue, ensure the delivery, this hardly 
 ## Known issues
 - if there's at least one message with corrupted format, the entire readout by consumer-publisher service
 will be rejected by DB and not posted. Not fixed because of lack of time and low importance
-
-## ToDo:
-- create CI for unit test execution
-- create CI for integration test execution (?)
+- Smoke test for Kafka consumer fails with SSL error. The reason is unclear. Possible workaround - to use SASL authentification instead of providing certificates
