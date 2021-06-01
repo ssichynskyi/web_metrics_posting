@@ -7,7 +7,7 @@ from tests.mocks.consumer import consumer
 
 @pytest.mark.unit
 def test_insert_query_creation():
-    db = WebMonitoringDBWrapper('mock-db', 'user', 'password', 'host', 'port')
+    db = WebMonitoringDBWrapper('host', 'port', 'user', 'password', 'mock-db')
     db.insert(consumer.fetch_latest(), db_lib=mock_db_lib)
     mock_db_lib.connect.assert_called_once_with(**db._connection_params)
     for part in EXPECTED_ARGS_INSERT:
@@ -17,7 +17,7 @@ def test_insert_query_creation():
 @pytest.mark.unit
 def test_delete_query_not_possible_with_no_params():
     mock_db_active_cursor.execute.reset_mock()
-    db = WebMonitoringDBWrapper('mock-db', 'user', 'password', 'host', 'port')
+    db = WebMonitoringDBWrapper('host', 'port', 'user', 'password', 'mock-db')
     db.delete_data(db_lib=mock_db_lib)
     mock_db_active_cursor.execute.assert_not_called()
 
@@ -25,7 +25,7 @@ def test_delete_query_not_possible_with_no_params():
 @pytest.mark.unit
 def test_delete_query_creation():
     mock_db_active_cursor.execute.reset_mock()
-    db = WebMonitoringDBWrapper('mock-db', 'user', 'password', 'host', 'port')
+    db = WebMonitoringDBWrapper('host', 'port', 'user', 'password', 'mock-db')
     db.delete_data(db_lib=mock_db_lib, comment='test')
     for part in EXPECTED_ARGS_DELETE:
         assert part in mock_db_active_cursor.execute.call_args_list[0][0][0]

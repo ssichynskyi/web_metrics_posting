@@ -68,4 +68,16 @@ optional arguments:
   will be rejected by DB and not posted. Not fixed because of lack of time and low importance
 
 - Smoke test for Kafka consumer fails with SSL error. The reason is unclear.
-  Possible workaround - to use SASL authentification instead of providing certificates
+  Possible workaround - to use SASL authentication instead of providing certificates
+
+## ToDo
+- make services agnostic to external services and configurable
+- fix tests
+- improve logging
+- improve import system
+- add local kafka and postgres configuration for testing
+- add containerized CI testing -> using kafka and postgres containers
+- improve mock (with patching) if possible
+- add commit hooks and CI manipulations
+- change docu strings to restructuredText and add automatic formatting by black
+- add automatic docu-string creation

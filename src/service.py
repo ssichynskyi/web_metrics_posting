@@ -5,7 +5,9 @@ import sys
 import time
 
 
+from functools import partial
 from typing import Iterable, Optional
+
 
 try:
     from ..src.postgres_wrapper import WebMonitoringDBWrapper
@@ -70,8 +72,6 @@ CONSUMER = _brokers[_broker_settings['type']](
     service_uri=_broker_uri,
     **_broker_auth[_broker_settings['auth']]
 )
-
-from functools import partial
 
 if isinstance(_db_auth[_db_settings['auth']], tuple):
     DATABASE = partial(
