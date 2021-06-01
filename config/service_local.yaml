@@ -1,13 +1,20 @@
 ---
-Metrics endpoint:
+Metrics collection endpoint:
+  local:
+    broker:
+      type: kafka
+      host: 'kafka-3b71190f-project-7747.aivencloud.com'
+      port: 26867
+      auth: client_cert
+
+Metrics storage endpoint:
   Aiven:
     # number of seconds between burst-transactions to DB. It's highly recommended that
     # this time is at least 10x larger than request sleep time for paired service - metric collector.env
     # In case it's smaller or comparable, DB publisher service may through warnings in log
     upload every: 60
-    Kafka:
-      host: ''
-      port:
-    Postgres:
-      host: ''
-      port:
+    db:
+      type: postgres
+      host: 'pg-12e12ac-project-7747.aivencloud.com'
+      port: 26865
+      auth: basic

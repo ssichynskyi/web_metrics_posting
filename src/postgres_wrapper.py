@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 
 class Postgres:
-    def __init__(self, database: str, user: str, password: str, host: str, port: Union[int, str]):
+    def __init__(self, host: str, port: Union[int, str], user: str, password: str, database: str):
         """Wrapper / Facade class for psycopg2 lib
 
         Args:
@@ -91,11 +91,11 @@ class WebMonitoringDBWrapper(Postgres):
 
     TABLE = 'web_metrics.metrics'
 
-    def __init__(self, database: str, user: str, password: str, host: str, port: Union[int, str]):
+    def __init__(self, host: str, port: Union[int, str], user: str, password: str, database: str):
         """Wrapper / Facade class for psycopg2 lib
 
         Extends:
-            Postgress class
+            Postgres class
 
         Args:
             database: DB schema to use
@@ -104,7 +104,7 @@ class WebMonitoringDBWrapper(Postgres):
             host: url of DB service
             port: port of DB service to connect to
         """
-        super().__init__(database, user, password, host, port)
+        super().__init__(host, port, user, password, database)
 
     def insert(self, data: List[Dict[str, str]], db_lib=psycopg2) -> Optional[List[Tuple[
         datetime.datetime, str, str, datetime.timedelta, int, str, Optional[bool], str

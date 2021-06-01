@@ -1,6 +1,6 @@
 import pytest
 
-from src.service import DATABASE, AIVEN_KAFKA_CONSUMER as consumer
+from src.service import DATABASE, CONSUMER as consumer
 
 
 """These tests ensure that kafka consumer and DB connector are properly configured
