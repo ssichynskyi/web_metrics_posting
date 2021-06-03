@@ -40,7 +40,6 @@ def merge_dicts(main: dict, complement: dict) -> dict:
         merged dict using above mentioned logic
 
     """
-    assert isinstance(main, dict) and main, 'Expected `main` to be non-empty dict'
     if not complement:
         return main
 
