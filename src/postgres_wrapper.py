@@ -8,24 +8,24 @@ from typing import Union, Dict, List, Tuple, Optional, Any
 log = logging.getLogger(__name__)
 
 
-class Postgres:
+class SQLDatabaseWrapper:
     def __init__(self, host: str, port: Union[int, str], user: str, password: str, database: str):
         """Wrapper / Facade class for psycopg2 lib
 
         Args:
-            database: DB schema to use
-            user: username for authentication
-            password: password for authentication
             host: url of DB service
             port: port of DB service to connect to
+            user: username for authentication
+            password: password for authentication
+            database: DB schema to use
 
         """
         self._connection_params = {
-            'database': database,
+            'host': host,
+            'port': port,
             'user': user,
             'password': password,
-            'host': host,
-            'port': port
+            'database': database
         }
         self._db = database
         self._uri = f'{host}:{port}'
@@ -77,7 +77,7 @@ class Postgres:
         return result
 
 
-class WebMonitoringDBWrapper(Postgres):
+class WebMonitoringDBWrapper(SQLDatabaseWrapper):
     DATA_TO_DB = {
         'request_timestamp': 'time_stamp',
         'url': 'url',
@@ -89,8 +89,6 @@ class WebMonitoringDBWrapper(Postgres):
         'comment': 'comment'
     }
 
-    TABLE = 'web_metrics.metrics'
-
     def __init__(self, host: str, port: Union[int, str], user: str, password: str, database: str):
         """Wrapper / Facade class for psycopg2 lib
 
@@ -98,21 +96,29 @@ class WebMonitoringDBWrapper(Postgres):
             Postgres class
 
         Args:
-            database: DB schema to use
-            user: username for authentication
-            password: password for authentication
             host: url of DB service
             port: port of DB service to connect to
+            user: username for authentication
+            password: password for authentication
+            database: DB schema to use
         """
         super().__init__(host, port, user, password, database)
+        self._user = user
 
-    def insert(self, data: List[Dict[str, str]], db_lib=psycopg2) -> Optional[List[Tuple[
+    def insert(
+            self, data: List[Dict[str, str]],
+            schema: str,
+            table: str,
+            db_lib=psycopg2
+    ) -> Optional[List[Tuple[
         datetime.datetime, str, str, datetime.timedelta, int, str, Optional[bool], str
     ]]]:
         """Inserts data to table defined in self.TABLE
 
         Args:
             data: list of json-serializable dicts
+            schema: database schema
+            table: table name in DB to insert data to
             db_lib: library object to use. Shall have at least compatible
                 by signature methods: connect, cursor, cursor.execute,
                 cursor.fetchall and ProgrammingError exception.
@@ -125,6 +131,9 @@ class WebMonitoringDBWrapper(Postgres):
         if not data:
             log.warning('Insertion query called but no data supplied! Operation aborted.')
             return
+
+        full_table_name = f'{schema}.{table}'
+
         try:
             data = [{self.DATA_TO_DB[k]: 'NULL' if v is None else v for k, v in entry.items()} for entry in data]
         except KeyError as e:
@@ -135,27 +144,63 @@ class WebMonitoringDBWrapper(Postgres):
         values = [f'({", ".join(value_set)})' for value_set in values]
         values_str = ', '.join(values)
         insert_query = f'''
-            INSERT INTO {self.TABLE}({columns_str})
+            INSERT INTO {full_table_name}({columns_str})
             VALUES
             {values_str}
             RETURNING *;
         '''
+        create_table_query = f'''
+            CREATE SCHEMA IF NOT EXISTS {schema}
+                AUTHORIZATION {self._user};
+            CREATE TABLE IF NOT EXISTS {full_table_name}(
+                time_stamp timestamp NOT NULL,
+                url VARCHAR NOT NULL,
+                agent VARCHAR NOT NULL,
+                response_time INTERVAL(3),
+                status_code INT,
+                ip VARCHAR,
+                content_validation BOOLEAN,
+                comment VARCHAR
+            );
+            CREATE INDEX IF NOT EXISTS
+                {table}_url ON {full_table_name}(url);
+            CREATE INDEX IF NOT EXISTS
+                {table}_status_code ON {full_table_name}(status_code);
+            CREATE INDEX IF NOT EXISTS
+                {table}_agent ON {full_table_name}(agent);
+            CREATE INDEX IF NOT EXISTS
+                {table}_response_time ON {full_table_name}(response_time);
+            CREATE INDEX IF NOT EXISTS
+                {table}_ip ON {full_table_name}(ip);
+            CREATE INDEX IF NOT EXISTS
+                {table}_comment ON {full_table_name}(comment);
+        '''
+
+        self.execute_sql(create_table_query, db_lib=db_lib)
         result = self.execute_sql(insert_query, db_lib=db_lib)
         if result:
             log.info(f'Successfully inserted rows in db {result}')
         return result
 
-    def delete_data(self, db_lib=psycopg2, **kwargs) -> Optional[List[Tuple[
+    def delete_data(
+            self,
+            schema: str,
+            table: str,
+            db_lib=psycopg2,
+            **kwargs
+    ) -> Optional[List[Tuple[
         datetime.datetime, str, str, datetime.timedelta, int, str, bool, str
     ]]]:
-        """Removes rows from the table
+        """Removes rows from the table.
 
         Args:
-            **kwargs: keys and values used in WHERE filter
+            schema: database schema
+            table: table name in DB to insert data to
             db_lib: library object to use. Shall have at least compatible
                 by signature methods: connect, cursor, cursor.execute,
                 cursor.fetchall and ProgrammingError exception.
                 Default is postgres psycopg2.
+            **kwargs: keys and values used in WHERE filter
 
         Returns:
             removed rows as list of tuples
@@ -164,10 +209,11 @@ class WebMonitoringDBWrapper(Postgres):
         if not kwargs:
             log.warning('Calling delete with no params rejected! Are you trying to wipe all data?')
             return
+        full_table_name = f'{schema}.{table}'
         search_param_str = ','.join([f"{str(k)}='{str(v)}'" for k, v in kwargs.items()])
         delete_query = f'''
         DELETE
-        FROM {self.TABLE}
+        FROM {full_table_name}
         WHERE {search_param_str}
         RETURNING *;
         '''

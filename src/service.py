@@ -18,15 +18,25 @@ except ImportError:
     from src.consumer import Consumer
     from utils.env_config import config
 
-
 TOPIC = 'website-metrics'
-SCHEMA = 'website_metrics'
+DB = os.getenv('DB', default='website_metrics')
+SCHEMA = 'web_metrics'
+TABLE = 'metrics'
 
 _storage_provider = os.environ['STORAGE_SERVICE_PROVIDER']
 _storage_settings = config['Metrics storage endpoint'][_storage_provider]
 _db_settings = _storage_settings['db']
 
 _db_auth_basic = (os.environ.get('DB_LOGIN'), os.environ.get('DB_PASS'))
+
+_db_auth = {
+    'scram': _db_auth_basic,
+    'no_auth': ()
+}
+
+_db = {
+    'postgres': WebMonitoringDBWrapper
+}
 
 SLEEP_BETWEEN_REQUESTS = _storage_settings['upload every']
 
@@ -38,38 +48,32 @@ _broker_port = str(_broker_settings['port'])
 _broker_uri = ':'.join((_broker_url, _broker_port))
 
 _broker_auth_sasl_plain = {
+    'security_protocol': 'SASL_PLAINTEXT',
     'sasl_mechanism': 'PLAIN',
     'sasl_plain_username': os.environ.get('BROKER_USERNAME'),
     'sasl_plain_password': os.environ.get('BROKER_PASSWORD')
 }
 
-_broker_auth_cert = {
-    'ca_path': os.environ.get('BROKER_CA_CERT'),
-    'cert_path': os.environ.get('BROKER_SERVICE_CERT'),
-    'key_path': os.environ.get('BROKER_SERVICE_KEY')
+_broker_auth_ssl = {
+    'security_protocol': 'SSL',
+    'ssl_cafile': os.environ.get('BROKER_CA_CERT'),
+    'ssl_certfile': os.environ.get('BROKER_SERVICE_CERT'),
+    'ssl_keyfile': os.environ.get('BROKER_SERVICE_KEY')
 }
-
 
 _brokers = {
     'kafka': Consumer
 }
 
-_db = {
-    'postgres': WebMonitoringDBWrapper
-}
-
 _broker_auth = {
     'sasl_plain': _broker_auth_sasl_plain,
-    'client_cert': _broker_auth_cert
-}
-
-_db_auth = {
-    'basic': _db_auth_basic
+    'ssl': _broker_auth_ssl,
+    'no_auth': {'security_protocol': 'PLAINTEXT'}
 }
 
 CONSUMER = _brokers[_broker_settings['type']](
     TOPIC,
-    service_uri=_broker_uri,
+    bootstrap_servers=_broker_uri,
     **_broker_auth[_broker_settings['auth']]
 )
 
@@ -97,7 +101,9 @@ def consume_publish_run(
         db_wrapper,
         sleep_time: int,
         topics: Optional[Iterable[str]] = None,
-        cycles: Optional[int] = None
+        cycles: Optional[int] = None,
+        db_schema: Optional[str] = None,
+        db_table: Optional[str] = None
 ):
     """Service runner for fetching data from Kafka broker and posting to DB
 
@@ -107,6 +113,8 @@ def consume_publish_run(
         sleep_time: number of seconds to wait between metric collection
         topics: to change to. When provided, previous topics are wiped out
         cycles: number of iterations to run the service. Runs infinitely if None
+        db_schema: database schema (in postgres understanding) to store data
+        db_table: database table to store data
 
     Returns:
         None, runs until interrupted by user or iterated "iterations" times
@@ -127,7 +135,7 @@ def consume_publish_run(
                 log.warning('No data to push to DB. Is web metric service running?')
             else:
                 log.info(f'Successfully fetched {len(data)} pieces of data')
-                db_wrapper.insert(data)
+                db_wrapper.insert(data, schema=db_schema, table=db_table)
             counter += 1
             if not proceed():
                 log.info(f'Exiting service because it worked {counter} out of {cycles} cycles')
@@ -147,10 +155,24 @@ if __name__ == '__main__':
         type=str
     )
     cmd_args.add_argument(
+        '--db',
+        dest='db',
+        help=f'Database to store, no quotes. Defaults to {DB}',
+        default=DB,
+        type=str
+    )
+    cmd_args.add_argument(
         '--schema',
         dest='schema',
-        help=f'Database schema to store, no quotes. Defaults to {SCHEMA}',
+        help=f'Schema in Database to store, no quotes.',
         default=SCHEMA,
+        type=str
+    )
+    cmd_args.add_argument(
+        '--table',
+        dest='table',
+        help=f'Table in Database to store, no quotes.',
+        default=TABLE,
         type=str
     )
     cmd_args.add_argument(
@@ -171,13 +193,12 @@ if __name__ == '__main__':
         format='%(asctime)s - %(levelname)s | %(name)s >>> %(message)s',
         datefmt='%d-%b-%Y %H:%M:%S'
     )
-    try:
-        consume_publish_run(
-            CONSUMER,
-            DATABASE(args.schema),
-            sleep_time=args.sleep if args.sleep else SLEEP_BETWEEN_REQUESTS,
-            topics=[args.topic] if args.topic else None,
-            cycles=args.cycles if args.cycles else None
-        )
-    except KeyboardInterrupt:
-        sys.exit(0)
+    consume_publish_run(
+        CONSUMER,
+        DATABASE(args.db),
+        sleep_time=args.sleep if args.sleep else SLEEP_BETWEEN_REQUESTS,
+        topics=[args.topic] if args.topic else None,
+        cycles=args.cycles if args.cycles else None,
+        db_schema=args.schema if args.schema else None,
+        db_table=args.table if args.table else None
+    )
