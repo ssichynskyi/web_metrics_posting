@@ -71,9 +71,11 @@ optional arguments:
   Possible workaround - to use SASL authentication instead of providing certificates
 
 ## ToDo
-- make services agnostic to external services and configurable
-- fix tests
 - improve logging
+- move constants to separate module (fix this in tests and in service)
+- update service usage here
+- adjust CI
+- move common code into separate repo and connect as submodule
 - improve import system
 - add local kafka and postgres configuration for testing
 - add containerized CI testing -> using kafka and postgres containers
