@@ -31,7 +31,7 @@ valid_data = [
   'resp_time': None,
   'resp_status_code': 200,
   'pattern_found': None,
-  'service_name': None,
+  'service_name': 'Web metric collection service',
   'comment': 'test'
  }
 ]

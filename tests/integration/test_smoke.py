@@ -1,6 +1,6 @@
 import pytest
 
-from src.service import DATABASE, CONSUMER as consumer
+from src.service import DATABASE, DB, TABLE, SCHEMA, CONSUMER as consumer
 
 
 """These tests ensure that kafka consumer and DB connector are properly configured
@@ -16,4 +16,4 @@ def test_smoke_kafka_consumer():
 
 @pytest.mark.smoke
 def test_smoke_data_base():
-    DATABASE.execute_sql(f"SELECT * FROM {DATABASE.TABLE} WHERE comment='test'")
+    DATABASE(DB).execute_sql(f"SELECT * FROM {SCHEMA}.{TABLE} WHERE comment='test'")

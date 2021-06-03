@@ -1,13 +1,14 @@
 import datetime
 import pytest
 
-
+from src.service import SCHEMA, TABLE
 from tests.mocks.consumer import consumer
 
 
 @pytest.mark.integration
 def test_db_wrapper_integration(db_client):
-    inserted_rows = db_client.insert(consumer.fetch_latest())
+    data = consumer.fetch_latest()
+    inserted_rows = db_client.insert(data, schema=SCHEMA, table=TABLE)
     for row in inserted_rows:
         assert row in EXPECTED, f'Row from DB doesnt match with expected: {row}'
     for row in EXPECTED:
@@ -38,7 +39,7 @@ EXPECTED = [
     (
         datetime.datetime(2021, 1, 1, 0, 0),
         'https://www.monedo.com/',
-        None,
+        'Web metric collection service',
         None,
         200,
         None,
