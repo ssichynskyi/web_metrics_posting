@@ -23,7 +23,7 @@ DB = os.getenv('DB', default='website_metrics')
 SCHEMA = 'web_metrics'
 TABLE = 'metrics'
 
-_storage_provider = os.environ['STORAGE_SERVICE_PROVIDER']
+_storage_provider = os.environ.get('STORAGE_SERVICE_PROVIDER')
 _storage_settings = config['Metrics storage endpoint'][_storage_provider]
 _db_settings = _storage_settings['db']
 

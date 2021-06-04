@@ -91,6 +91,12 @@ jobs:
         env:
           PROJECT_ROOT: ${{ github.workspace }}
           PYTHONPATH: ${{ github.workspace }}
+          PUBLISH_CONFIG: ${{ github.workspace }}/config/service.yaml
+          DB_LOGIN: admin
+          DB_PASS: password
+          DB: website_metrics
+          BROKER_SERVICE_PROVIDER: docker
+          STORAGE_SERVICE_PROVIDER: docker
 
       - name: run integration tests
         run: |
@@ -100,8 +106,6 @@ jobs:
           PROJECT_ROOT: ${{ github.workspace }}
           PYTHONPATH: ${{ github.workspace }}
           PUBLISH_CONFIG: ${{ github.workspace }}/config/service.yaml
-          BROKER_USERNAME: user
-          BROKER_PASSWORD: password
           DB_LOGIN: admin
           DB_PASS: password
           DB: website_metrics
