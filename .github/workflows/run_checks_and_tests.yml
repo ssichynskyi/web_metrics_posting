@@ -7,9 +7,37 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        # python-version: [3.7, 3.8, 3.9]
+        python-version: [3.9]
     timeout-minutes: 10
 
+    services:
+      zookeeper-server:
+        image: bitnami/zookeeper:latest
+        env:
+          ALLOW_ANONYMOUS_LOGIN: yes
+      kafka-server:
+        image: bitnami/kafka:latest
+        ports:
+          - 9092:9092
+        env:
+          ALLOW_PLAINTEXT_LISTENER: yes
+          KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: true
+          KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper-server:2181
+          KAFKA_BROKER_ID: 1
+          KAFKA_CFG_LISTENERS: 'PLAINTEXT://:9092'
+          KAFKA_CFG_ADVERTISED_LISTENERS: 'PLAINTEXT://localhost:9092'
+          KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      postgres-server:
+        image: postgres:latest
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: website_metrics
+          POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+          POSTGRES_INITDB_ARGS: '--auth-host=scram-sha-256'
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
@@ -28,19 +56,19 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      - name: Code Inspector GitHub action
-        uses: codeinspectorio/github-action@v1
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          code_inspector_access_key: ${{ secrets.CODE_INSPECTOR_ACCESS_KEY }}
-          code_inspector_secret_key: ${{ secrets.CODE_INSPECTOR_SECRET_KEY }}
-          min_quality_grade: 'NEUTRAL'
-          min_quality_score: '70'
-          max_defects_rate: '0.1'
-          max_complex_functions_rate: '0.1'
-          max_long_functions_rate: '0.1'
-          project_name: 'web_metrics_posting'
-          max_timeout_sec: '600'
+#      - name: Code Inspector GitHub action
+#        uses: codeinspectorio/github-action@v1
+#        with:
+#          repo_token: ${{ secrets.GITHUB_TOKEN }}
+#          code_inspector_access_key: ${{ secrets.CODE_INSPECTOR_ACCESS_KEY }}
+#          code_inspector_secret_key: ${{ secrets.CODE_INSPECTOR_SECRET_KEY }}
+#          min_quality_grade: 'NEUTRAL'
+#          min_quality_score: '70'
+#          max_defects_rate: '0.1'
+#          max_complex_functions_rate: '0.1'
+#          max_long_functions_rate: '0.1'
+#          project_name: 'web_metrics_posting'
+#          max_timeout_sec: '600'
 
       - name: Install pipenv
         run: |
@@ -66,26 +94,16 @@ jobs:
 
       - name: run integration tests
         run: |
-          echo 'Creating folder for certificates and key...'
-          pipenv run mkdir ${{ github.workspace }}/certs
-          pipenv run printf "%s" $(echo ${{ secrets.AIVEN_CLOUD_CA }}) > ${{ github.workspace }}/certs/ca.pem
-          
-          pipenv run printf "%s" $(echo ${{ secrets.AIVEN_CLOUD_SERVICE_CERT }}) > ${{ github.workspace }}/certs/service.cert
-          
-          pipenv run printf "%s" $(echo ${{ secrets.AIVEN_CLOUD_SERVICE_KEY }}) > ${{ github.workspace }}/certs/service.key
-          
-          echo 'Generate config file service.yaml...'
-          pipenv --envs --support --verbose run python ${{ github.workspace }}/utils/ci_config_builder.py --file=${{ github.workspace }}/config/service.yaml --name=Aiven --kafkaurl=${{ secrets.AIVEN_CLOUD_KAFKA_URL }} --kafkaport=${{ secrets.AIVEN_CLOUD_KAFKA_PORT }} --postgresurl=${{ secrets.AIVEN_CLOUD_POSTGRES_URL }} --postgresport=${{ secrets.AIVEN_CLOUD_POSTGRES_PORT }}
-          echo 'Run tests...'
-          # excluding kafka consumer smoke test
-          pipenv --envs --support --verbose run pytest tests/integration -v -m "not slow"
-
+          echo 'Run integration tests...'
+          pipenv --envs --support --verbose run pytest tests/integration -v
         env:
           PROJECT_ROOT: ${{ github.workspace }}
           PYTHONPATH: ${{ github.workspace }}
           PUBLISH_CONFIG: ${{ github.workspace }}/config/service.yaml
-          CA-CERT: ${{ github.workspace }}/certs/ca.pem
-          SERVICE-CERT: ${{ github.workspace }}/certs/service.cert
-          SERVICE-KEY: ${{ github.workspace }}/certs/service.key
-          DB_LOGIN: ${{ secrets.AIVEN_CLOUD_POSTGRES_LOGIN }}
-          DB_PASS: ${{ secrets.AIVEN_CLOUD_POSTGRES_PASS }}
+          BROKER_USERNAME: user
+          BROKER_PASSWORD: password
+          DB_LOGIN: admin
+          DB_PASS: password
+          DB: website_metrics
+          BROKER_SERVICE_PROVIDER: docker
+          STORAGE_SERVICE_PROVIDER: docker
