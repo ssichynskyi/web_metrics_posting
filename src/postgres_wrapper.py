@@ -6,6 +6,7 @@ from typing import Union, Dict, List, Tuple, Optional, Any
 
 
 log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
 
 
 class SQLDatabaseWrapper:

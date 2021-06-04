@@ -7,6 +7,7 @@ from kafka import KafkaConsumer
 
 
 log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
 
 # I've used this example:
 # https://github.com/aiven/aiven-examples/blob/master/kafka/python/consumer_example.py
