@@ -122,7 +122,7 @@ def consume_publish_run(
 
     if topics:
         consumer.change_topics(topics)
-    log = logging.getLogger('ConsumerAndSharingService')
+    log = logging.getLogger(f'{__file__}:ConsumerAndPublishingService')
     log.addHandler(logging.NullHandler())
 
     with consumer:
