@@ -106,15 +106,64 @@ class WebMonitoringDBWrapper(SQLDatabaseWrapper):
         super().__init__(host, port, user, password, database)
         self._user = user
 
+    def create_table_if_not_exist(
+            self,
+            schema: str,
+            table: str,
+            db_lib=psycopg2
+    ):
+        """Creates table and schema if not exist
+
+        Args:
+            schema: database schema to create (if not exists)
+            table: table in schema to create (if not exists)
+            db_lib: library object to use. Shall have at least compatible
+                by signature methods: connect, cursor, cursor.execute,
+                cursor.fetchall and ProgrammingError exception.
+                Default is postgres psycopg2.
+
+        Returns:
+            inserted rows as list of tuples (exact data types specified in signature)
+
+        """
+        create_table_query = f'''
+            CREATE SCHEMA IF NOT EXISTS {schema}
+                AUTHORIZATION {self._user};
+            CREATE TABLE IF NOT EXISTS {schema}.{table}(
+                time_stamp timestamp NOT NULL,
+                url VARCHAR NOT NULL,
+                agent VARCHAR NOT NULL,
+                response_time INTERVAL(3),
+                status_code INT,
+                ip VARCHAR,
+                content_validation BOOLEAN,
+                comment VARCHAR
+            );
+            CREATE INDEX IF NOT EXISTS
+                {table}_url ON {schema}.{table}(url);
+            CREATE INDEX IF NOT EXISTS
+                {table}_status_code ON {schema}.{table}(status_code);
+            CREATE INDEX IF NOT EXISTS
+                {table}_agent ON {schema}.{table}(agent);
+            CREATE INDEX IF NOT EXISTS
+                {table}_response_time ON {schema}.{table}(response_time);
+            CREATE INDEX IF NOT EXISTS
+                {table}_ip ON {schema}.{table}(ip);
+            CREATE INDEX IF NOT EXISTS
+                {table}_comment ON {schema}.{table}(comment);
+        '''
+        self.execute_sql(create_table_query, db_lib=db_lib)
+
     def insert(
-            self, data: List[Dict[str, str]],
+            self,
+            data: List[Dict[str, str]],
             schema: str,
             table: str,
             db_lib=psycopg2
     ) -> Optional[List[Tuple[
         datetime.datetime, str, str, datetime.timedelta, int, str, Optional[bool], str
     ]]]:
-        """Inserts data to table defined in self.TABLE
+        """Inserts data to table defined as schema.table
 
         Args:
             data: list of json-serializable dicts
@@ -150,34 +199,7 @@ class WebMonitoringDBWrapper(SQLDatabaseWrapper):
             {values_str}
             RETURNING *;
         '''
-        create_table_query = f'''
-            CREATE SCHEMA IF NOT EXISTS {schema}
-                AUTHORIZATION {self._user};
-            CREATE TABLE IF NOT EXISTS {full_table_name}(
-                time_stamp timestamp NOT NULL,
-                url VARCHAR NOT NULL,
-                agent VARCHAR NOT NULL,
-                response_time INTERVAL(3),
-                status_code INT,
-                ip VARCHAR,
-                content_validation BOOLEAN,
-                comment VARCHAR
-            );
-            CREATE INDEX IF NOT EXISTS
-                {table}_url ON {full_table_name}(url);
-            CREATE INDEX IF NOT EXISTS
-                {table}_status_code ON {full_table_name}(status_code);
-            CREATE INDEX IF NOT EXISTS
-                {table}_agent ON {full_table_name}(agent);
-            CREATE INDEX IF NOT EXISTS
-                {table}_response_time ON {full_table_name}(response_time);
-            CREATE INDEX IF NOT EXISTS
-                {table}_ip ON {full_table_name}(ip);
-            CREATE INDEX IF NOT EXISTS
-                {table}_comment ON {full_table_name}(comment);
-        '''
-
-        self.execute_sql(create_table_query, db_lib=db_lib)
+        self.create_table_if_not_exist(schema, table, db_lib)
         result = self.execute_sql(insert_query, db_lib=db_lib)
         if result:
             log.info(f'Successfully inserted rows in db {result}')
