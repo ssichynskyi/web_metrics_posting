@@ -1,7 +1,6 @@
 import argparse
 import logging
 import os
-import sys
 import time
 
 
@@ -141,7 +140,6 @@ def consume_publish_run(
                 log.info(f'Exiting service because it worked {counter} out of {cycles} cycles')
                 break
             time.sleep(sleep_time)
-    sys.exit(0)
 
 
 if __name__ == '__main__':
