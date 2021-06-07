@@ -1,0 +1,26 @@
+---
+# This is a sample file for the local config settings
+# If you want to add local environment settings to application config,
+# create a file service_local.yaml from this file and customize it
+# All settings will be merged with those of service.yaml. In case of
+# conflict the preference will be given to service_local.yaml otherwise
+# values will be added. Please make sure to keep the structure consistent.
+Metrics collection endpoint:
+  local:
+    broker:
+      type: kafka
+      host:
+      port:
+      auth:
+
+Metrics storage endpoint:
+  local:
+    # number of seconds between burst-transactions to DB. It's highly recommended that
+    # this time is at least 10x larger than request sleep time for paired service - metric collector.env
+    # In case it's smaller or comparable, DB publisher service may through warnings in log
+    upload every: 60
+    db:
+      type: postgres
+      host:
+      port:
+      auth:

@@ -1,9 +1,10 @@
 import pytest
-from src.service import DATABASE
+from src.service import DATABASE, DB, SCHEMA, TABLE
 
 
 @pytest.fixture(scope="package")
 def db_client():
-    DATABASE.delete_data(comment='test')
-    yield DATABASE
-    DATABASE.delete_data(comment='test')
+    db = DATABASE(DB)
+    db.delete_data(schema=SCHEMA, table=TABLE, comment='test')
+    yield db
+    db.delete_data(schema=SCHEMA, table=TABLE, comment='test')

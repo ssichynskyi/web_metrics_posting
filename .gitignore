@@ -132,4 +132,4 @@ dmypy.json
 .idea/
 
 # Special cases for this project
-config/service.yaml
+config/service_local.yaml

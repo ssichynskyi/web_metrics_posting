@@ -63,9 +63,19 @@ optional arguments:
 - full test coverage
 
 ## Known issues
-
 - if there's at least one message with corrupted format, the entire readout by consumer-publisher service
-  will be rejected by DB and not posted. Not fixed because of lack of time and low importance
+  will be rejected by DB and not posted. Not fixed because of lack of time and low importance.
+- Application could be stopped only via SIGINT or harder method which results in
+  the abnormal log - Keyboard interruption exception.
 
-- Smoke test for Kafka consumer fails with SSL error. The reason is unclear.
-  Possible workaround - to use SASL authentification instead of providing certificates
+## ToDo
+- move constants to separate module (fix this in tests and in service)
+- move common code into separate repo and connect as submodule
+- adjust CI
+- improve import system
+- add containerized CI testing -> using kafka and postgres containers
+- create a way to shut down the service normally
+- improve mock (with patching)
+- add commit hooks and CI manipulations
+- change docu strings to restructuredText and add automatic formatting by black
+- add automatic docu-string creation
