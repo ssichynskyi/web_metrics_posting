@@ -162,21 +162,21 @@ if __name__ == '__main__':
     cmd_args.add_argument(
         '--schema',
         dest='schema',
-        help=f'Schema in Database to store, no quotes.',
+        help=f'Schema in Database to store, no quotes. Defaults to {SCHEMA}',
         default=SCHEMA,
         type=str
     )
     cmd_args.add_argument(
         '--table',
         dest='table',
-        help=f'Table in Database to store, no quotes.',
+        help=f'Table in Database to store, no quotes. Defaults to {TABLE}',
         default=TABLE,
         type=str
     )
     cmd_args.add_argument(
         '--cycles',
         dest='cycles',
-        help='number of cycles to run, infinite if not specified',
+        help='number of cycles to run, infinite if not specified. Infinite if not provided',
         type=int
     )
     cmd_args.add_argument(

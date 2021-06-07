@@ -23,7 +23,7 @@ for the creation of virtual environment
 To run service with default parameters from shell, go to service project root filder and run:
 ```console
 $pipenv shell
-$python3.9 src/service.py
+$python3.9 src/service.py [args]
 ```
 
 ### Command line options
@@ -34,12 +34,15 @@ To get help, from the project root
 ```console
 $pipenv shell
 $python src/service.py --help
-usage: service.py [-h] [--topic TOPIC] [--cycles CYCLES] [--sleep SLEEP]
+usage: service.py [-h] [--topic TOPIC] [--db DB] [--schema SCHEMA] [--table TABLE] [--cycles CYCLES] [--sleep SLEEP]
 
 optional arguments:
   -h, --help       show this help message and exit
   --topic TOPIC    topic name to publish, no quotes. Defaults to website-metrics
-  --cycles CYCLES  number of cycles to run, infinite if not specified
+  --db DB          Database to store, no quotes. Defaults to website_metrics
+  --schema SCHEMA  Schema in Database to store, no quotes. Defaults to web_metrics
+  --table TABLE    Table in Database to store, no quotes. Defaults to metrics
+  --cycles CYCLES  number of cycles to run, infinite if not specified. Infinite if not provided
   --sleep SLEEP    seconds to wait between broker polling, defaults to service.yaml settings
 ```
 
@@ -56,8 +59,6 @@ optional arguments:
 
 - script to set up, configure, run and delete Kafka broker and Postgresql services
 
-- rolling out local kafka service in order to execute integration tests on local environment
-
 - testing kafka consumer with Aiven kafka broker (only done on E2E level)
 
 - full test coverage
@@ -65,15 +66,14 @@ optional arguments:
 ## Known issues
 - if there's at least one message with corrupted format, the entire readout by consumer-publisher service
   will be rejected by DB and not posted. Not fixed because of lack of time and low importance.
+
 - Application could be stopped only via SIGINT or harder method which results in
   the abnormal log - Keyboard interruption exception.
 
 ## ToDo
 - move constants to separate module (fix this in tests and in service)
 - move common code into separate repo and connect as submodule
-- adjust CI
 - improve import system
-- add containerized CI testing -> using kafka and postgres containers
 - create a way to shut down the service normally
 - improve mock (with patching)
 - add commit hooks and CI manipulations
