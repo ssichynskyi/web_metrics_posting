@@ -1,0 +1,99 @@
+name: Run end-to-end tests vs other master branches
+on:
+  pull_request:
+    branches: [main, 'releases/**']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.9]
+    timeout-minutes: 10
+
+    services:
+      zookeeper-server:
+        image: bitnami/zookeeper:latest
+        env:
+          ALLOW_ANONYMOUS_LOGIN: yes
+      kafka-server:
+        image: bitnami/kafka:latest
+        ports:
+          - 9092:9092
+        env:
+          ALLOW_PLAINTEXT_LISTENER: yes
+          KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: true
+          KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper-server:2181
+          KAFKA_BROKER_ID: 1
+          KAFKA_CFG_LISTENERS: 'PLAINTEXT://:9092'
+          KAFKA_CFG_ADVERTISED_LISTENERS: 'PLAINTEXT://localhost:9092'
+          KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      postgres-server:
+        image: postgres:latest
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: website_metrics
+          POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+          POSTGRES_INITDB_ARGS: '--auth-host=scram-sha-256'
+    steps:
+      - name: Check out E2E tests
+        uses: actions/checkout@v2
+        with:
+          repository: ssichynskyi/web_metrics_e2e_tests
+          token: ${{ secrets.READ_E2E_TESTS }}
+          path: web_metrics_e2e_tests/
+          ref: main
+
+      - name: Check out repository code
+        uses: actions/checkout@v2
+        with:
+          path: web_metrics_e2e_tests/consume_publish
+
+      - name: Checkout web metric collection service
+        uses: actions/checkout@v2
+        with:
+          repository: ssichynskyi/web_metric_collection
+          path: web_metrics_e2e_tests/collect_produce
+          ref: main
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pipenv
+        run: |
+          python -m pip install --upgrade pipenv wheel
+
+      - id: cache-pipenv
+        uses: actions/cache@v1
+        with:
+          path: ~/.local/share/virtualenvs
+          key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
+
+      - name: Install dependencies
+        working-directory: ${{ github.workspace }}/web_metrics_e2e_tests
+        if: steps.cache-pipenv.outputs.cache-hit != 'true'
+        run: |
+          ls -l
+          pipenv install --dev
+
+      - name: run end-to-end tests
+        working-directory: ${{ github.workspace }}/web_metrics_e2e_tests
+        run: |
+          echo 'run end-to-end tests...'
+          pipenv --envs --support --verbose run pytest tests -v -c tests/pytest.ini
+        env:
+          PROJECT_ROOT: ${{ github.workspace }}/web_metrics_e2e_tests
+          PYTHONPATH: ${{ github.workspace }}/web_metrics_e2e_tests:${{ github.workspace }}/web_metrics_e2e_tests/collect_produce:${{ github.workspace }}/web_metrics_e2e_tests/consume_publish
+          COLLECTION_CONFIG: ${{ github.workspace }}/web_metrics_e2e_tests/collect_produce/config/service.yaml
+          PUBLISH_CONFIG: ${{ github.workspace }}/web_metrics_e2e_tests/consume_publish/config/service.yaml
+          DB_LOGIN: admin
+          DB_PASS: password
+          DB: website_metrics
+          BROKER_SERVICE_PROVIDER: docker
+          STORAGE_SERVICE_PROVIDER: docker
