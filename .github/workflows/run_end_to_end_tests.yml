@@ -1,7 +1,5 @@
 name: Run end-to-end tests vs other master branches
 on:
-  push:
-    branches: [e2e_tests_on_pull]
   pull_request:
     branches: [main, 'releases/**']
 
@@ -49,12 +47,6 @@ jobs:
           token: ${{ secrets.READ_E2E_TESTS }}
           path: web_metrics_e2e_tests/
           ref: main
-
-      - name: debug e2e checkout
-        run: |
-          ls -l web_metrics_e2e_tests
-          ls -l web_metrics_e2e_tests/consume_publish
-          ls -l web_metrics_e2e_tests/collect_produce
 
       - name: Check out repository code
         uses: actions/checkout@v2
