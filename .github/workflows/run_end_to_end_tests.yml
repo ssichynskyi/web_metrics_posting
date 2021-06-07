@@ -48,18 +48,24 @@ jobs:
           repository: ssichynskyi/web_metrics_e2e_tests
           token: ${{ secrets.READ_E2E_TESTS }}
           path: web_metrics_e2e_tests/
+      - name: debug e2e checkout
         run: |
           ls -l web_metrics_e2e_tests
           ls -l ${{ github.workspace }}/web_metrics_e2e_tests
+          cd web_metrics_e2e_tests
           git branch
 
       - name: Check out repository code
         uses: actions/checkout@v2
         with:
           path: web_metrics_e2e_tests/consume_publish
+
+      - name: debug this repo checkout
         run: |
           ls -l web_metrics_e2e_tests
           ls -l ${{ github.workspace }}/web_metrics_e2e_tests
+          ls -l ${{ github.workspace }}/web_metrics_e2e_tests/consume_publish
+          cd ${{ github.workspace }}/web_metrics_e2e_tests/consume_publish
           git branch
 
       - name: Checkout web metric collection service
@@ -67,9 +73,13 @@ jobs:
         with:
           repository: ssichynskyi/web_metric_collection
           path: web_metrics_e2e_tests/collect_produce
+
+      - name: debug other service checkout
         run: |
           ls -l web_metrics_e2e_tests
           ls -l ${{ github.workspace }}/web_metrics_e2e_tests
+          ls -l ${{ github.workspace }}/web_metrics_e2e_tests/collect_produce
+          cd ${{ github.workspace }}/web_metrics_e2e_tests/collect_produce
           git branch
 
       - name: Setup Python
