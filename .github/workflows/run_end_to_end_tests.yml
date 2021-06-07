@@ -1,4 +1,4 @@
-name: Run syntax checks, static code analysis and unit tests
+name: Run end-to-end tests vs other master branches
 on:
   push:
     branches: [e2e_tests_on_pull]
@@ -48,6 +48,8 @@ jobs:
           repository: ssichynskyi/web_metrics_e2e_tests
           token: ${{ secrets.READ_E2E_TESTS }}
           path: web_metrics_e2e_tests/
+          ref: main
+
       - name: debug e2e checkout
         run: |
           ls -l web_metrics_e2e_tests
@@ -73,6 +75,7 @@ jobs:
         with:
           repository: ssichynskyi/web_metric_collection
           path: web_metrics_e2e_tests/collect_produce
+          ref: main
 
       - name: debug other service checkout
         run: |
