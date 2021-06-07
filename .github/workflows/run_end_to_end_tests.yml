@@ -53,22 +53,13 @@ jobs:
       - name: debug e2e checkout
         run: |
           ls -l web_metrics_e2e_tests
-          ls -l ${{ github.workspace }}/web_metrics_e2e_tests
-          cd web_metrics_e2e_tests
-          git branch
+          ls -l web_metrics_e2e_tests/consume_publish
+          ls -l web_metrics_e2e_tests/collect_produce
 
       - name: Check out repository code
         uses: actions/checkout@v2
         with:
           path: web_metrics_e2e_tests/consume_publish
-
-      - name: debug this repo checkout
-        run: |
-          ls -l web_metrics_e2e_tests
-          ls -l ${{ github.workspace }}/web_metrics_e2e_tests
-          ls -l ${{ github.workspace }}/web_metrics_e2e_tests/consume_publish
-          cd ${{ github.workspace }}/web_metrics_e2e_tests/consume_publish
-          git branch
 
       - name: Checkout web metric collection service
         uses: actions/checkout@v2
@@ -76,14 +67,6 @@ jobs:
           repository: ssichynskyi/web_metric_collection
           path: web_metrics_e2e_tests/collect_produce
           ref: main
-
-      - name: debug other service checkout
-        run: |
-          ls -l web_metrics_e2e_tests
-          ls -l ${{ github.workspace }}/web_metrics_e2e_tests
-          ls -l ${{ github.workspace }}/web_metrics_e2e_tests/collect_produce
-          cd ${{ github.workspace }}/web_metrics_e2e_tests/collect_produce
-          git branch
 
       - name: Setup Python
         uses: actions/setup-python@v2
@@ -113,10 +96,10 @@ jobs:
           echo 'run end-to-end tests...'
           pipenv --envs --support --verbose run pytest tests -v -c tests/pytest.ini
         env:
-          PROJECT_ROOT: ${{ github.workspace }}
-          PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/collect_produce:${{ github.workspace }}/consume_publish
-          COLLECTION_CONFIG: ${{ github.workspace }}/collect_produce/config/service.yaml
-          PUBLISH_CONFIG: ${{ github.workspace }}/consume_publish/config/service.yaml
+          PROJECT_ROOT: ${{ github.workspace }}/web_metrics_e2e_tests
+          PYTHONPATH: ${{ github.workspace }}/web_metrics_e2e_tests:${{ github.workspace }}/web_metrics_e2e_tests/collect_produce:${{ github.workspace }}/web_metrics_e2e_tests/consume_publish
+          COLLECTION_CONFIG: ${{ github.workspace }}/web_metrics_e2e_tests/collect_produce/config/service.yaml
+          PUBLISH_CONFIG: ${{ github.workspace }}/web_metrics_e2e_tests/consume_publish/config/service.yaml
           DB_LOGIN: admin
           DB_PASS: password
           DB: website_metrics
