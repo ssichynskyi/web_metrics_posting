@@ -35,7 +35,8 @@ class SQLDatabaseWrapper:
             self,
             sql: str,
             db_lib: psycopg2 = psycopg2,
-            args: Union[Dict, List, Tuple] = None
+            args: Union[Dict, List, Tuple] = None,
+            fetch_results: bool = True
     ) -> Optional[List[Tuple[Any]]]:
         """Executes given sql with arguments
 
@@ -46,6 +47,10 @@ class SQLDatabaseWrapper:
                 cursor.fetchall and ProgrammingError exception.
                 Default is postgres psycopg2.
             args: tuple, list or dict to be inserted in sql
+            fetch_results: if True will try to fetch results of the last query.
+                For certain queries like table creation shall be set to False
+                because attempt to fetch result throws an exception. Although handled
+                in this implementation it produces unnecessary WARNING in log
 
         Returns:
             List of Dicts where:
@@ -71,10 +76,11 @@ class SQLDatabaseWrapper:
                 except BaseException as e:
                     # Exception is too broad but this is how it's raised by lib :-(
                     log.error(f'Error executing SQL query: {e}')
-                try:
-                    result = cursor.fetchall()
-                except db_lib.ProgrammingError as e:
-                    log.warning(f'Not possible to fetch query result: {e}')
+                if fetch_results:
+                    try:
+                        result = cursor.fetchall()
+                    except db_lib.ProgrammingError as e:
+                        log.warning(f'Not possible to fetch query result: {e}')
         return result
 
 
@@ -152,7 +158,7 @@ class WebMonitoringDBWrapper(SQLDatabaseWrapper):
             CREATE INDEX IF NOT EXISTS
                 {table}_comment ON {schema}.{table}(comment);
         '''
-        self.execute_sql(create_table_query, db_lib=db_lib)
+        self.execute_sql(create_table_query, db_lib=db_lib, fetch_results=False)
 
     def insert(
             self,
