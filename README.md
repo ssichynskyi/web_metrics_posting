@@ -67,8 +67,7 @@ optional arguments:
 - if there's at least one message with corrupted format, the entire readout by consumer-publisher service
   will be rejected by DB and not posted. Not fixed because of lack of time and low importance.
 
-- Application could be stopped only via SIGINT or harder method which results in
-  the abnormal log - Keyboard interruption exception.
+- code duplication with partner service
 
 ## ToDo
 - move constants to separate module (fix this in tests and in service)

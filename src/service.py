@@ -1,10 +1,12 @@
 import argparse
 import logging
 import os
+import sys
 import time
 
 
 from functools import partial
+from multiprocessing import Process
 from typing import Iterable, Optional
 
 
@@ -129,17 +131,20 @@ def consume_publish_run(
         counter = 0
         def proceed(): return counter < cycles if cycles else True
         while True:
-            data = consumer.fetch_latest()
-            if not data:
-                log.warning('No data to push to DB. Is web metric service running?')
-            else:
-                log.info(f'Successfully fetched {len(data)} pieces of data')
-                db_wrapper.insert(data, schema=db_schema, table=db_table)
-            counter += 1
-            if not proceed():
-                log.info(f'Exiting service because it worked {counter} out of {cycles} cycles')
+            try:
+                data = consumer.fetch_latest()
+                if not data:
+                    log.warning('No data to push to DB. Is web metric service running?')
+                else:
+                    log.info(f'Successfully fetched {len(data)} pieces of data')
+                    db_wrapper.insert(data, schema=db_schema, table=db_table)
+                counter += 1
+                if not proceed():
+                    log.info(f'Exiting service because it worked {counter} out of {cycles} cycles')
+                    break
+                time.sleep(sleep_time)
+            except KeyboardInterrupt:
                 break
-            time.sleep(sleep_time)
 
 
 if __name__ == '__main__':
@@ -191,12 +196,46 @@ if __name__ == '__main__':
         format='%(asctime)s - %(levelname)s | %(name)s >>> %(message)s',
         datefmt='%d-%b-%Y %H:%M:%S'
     )
-    consume_publish_run(
+
+    PROCESS_NAME = 'WebMetricsConsumerPublisher'
+    mp_args = (
         CONSUMER,
-        DATABASE(args.db),
-        sleep_time=args.sleep if args.sleep else SLEEP_BETWEEN_REQUESTS,
-        topics=[args.topic] if args.topic else None,
-        cycles=args.cycles if args.cycles else None,
-        db_schema=args.schema if args.schema else None,
-        db_table=args.table if args.table else None
+        DATABASE(args.db)
     )
+    mp_kwargs = {
+        'sleep_time': args.sleep if args.sleep else SLEEP_BETWEEN_REQUESTS,
+        'topics': [args.topic] if args.topic else None,
+        'cycles': args.cycles if args.cycles else None,
+        'db_schema': args.schema if args.schema else None,
+        'db_table': args.table if args.table else None
+    }
+    consume_publish_process = Process(
+        target=consume_publish_run,
+        args=mp_args,
+        kwargs=mp_kwargs
+    )
+
+    consume_publish_process.start()
+    if consume_publish_process.is_alive():
+        print(f'Process {PROCESS_NAME} is collecting web metrics...')
+    timeout = 5
+    while True:
+        try:
+            user_input = input('Type "quit" and press enter to exit... \n')
+        except KeyboardInterrupt:
+            user_input = 'quit'
+        if user_input == 'quit':
+            print('Stopping process execution...')
+            consume_publish_process.terminate()
+            time.sleep(timeout)
+        if consume_publish_process.is_alive():
+            print('Still alive after SIGTERM! Lets kill this thing!')
+            consume_publish_process.kill()
+            time.sleep(timeout)
+        if consume_publish_process.is_alive():
+            print("It's a zombie! You've made it, you deal with it! I'm out!")
+        if not consume_publish_process.is_alive():
+            msg = ' '.join((f'{PROCESS_NAME} stopped successfully.',
+                            f'Exit code: {consume_publish_process.exitcode}.'))
+            print(msg)
+        sys.exit(0)
